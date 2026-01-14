@@ -33,11 +33,11 @@ const GameRow: React.FC<GameRowProps> = ({ row, index, isSolved, isActive, onSel
         key={idx}
         className={`
           relative ${cellClass} flex items-center justify-center flex-shrink-0
-          text-lg sm:text-xl font-bold rounded-md shadow-sm transition-all duration-500
+          text-lg sm:text-2xl font-extrabold rounded-md shadow-sm transition-all duration-500
           perspective-1000 border border-white/20
           ${isKey ? 'ring-2 sm:ring-4 ring-yellow-400 z-10 scale-105' : 'bg-white/10'}
           ${showChar 
-            ? 'bg-white text-[#9b1106]' 
+            ? 'bg-white text-black' 
             : (isKey ? 'bg-[#7a0d05]/90' : 'bg-[#9b1106]/40') + ' text-transparent'}
         `}
       >

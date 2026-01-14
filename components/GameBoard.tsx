@@ -3,7 +3,7 @@ import { GameConfig } from '../types';
 import GameRow from './GameRow';
 import AnswerModal from './AnswerModal';
 import VictoryModal from './VictoryModal';
-import { Key, Unlock, ArrowLeft, Star, Volume2, VolumeX, Lightbulb, X } from 'lucide-react';
+import { Key, Unlock, ArrowLeft, Star, Volume2, VolumeX, Lightbulb, X, Image as ImageIcon, ChevronRight } from 'lucide-react';
 
 interface GameBoardProps {
   config: GameConfig;
@@ -23,8 +23,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
   const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Secret Hint Modal
+  // Secret Hint Modal Logic
   const [showSecretHints, setShowSecretHints] = useState(false);
+  const [activeHintImage, setActiveHintImage] = useState<string | null>(null);
 
   // Auto-play music on first interaction if possible, or just setup
   useEffect(() => {
@@ -44,6 +45,34 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
     }
   };
 
+  const playSuccessSound = () => {
+    if (volume <= 0) return;
+    try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        // Simple Major Triad (C E G)
+        const notes = [523.25, 659.25, 783.99, 1046.50]; 
+        notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1 * volume, ctx.currentTime + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + i * 0.05 + 0.4);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.05);
+            osc.stop(ctx.currentTime + i * 0.05 + 0.5);
+        });
+    } catch (e) {
+        // ignore
+    }
+  };
+
   const triggerPraise = () => {
     const praises = ["Tuyệt vời!", "Chính xác!", "Hay quá!", "Đúng rồi!", "Xuất sắc!"];
     const text = praises[Math.floor(Math.random() * praises.length)];
@@ -60,6 +89,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
       const normalizedAnswer = row.answer.replace(/\s/g, '').toUpperCase();
       
       if (normalizedInput === normalizedAnswer) {
+        playSuccessSound(); // Play sound
         const newSolved = new Set(solvedRows);
         newSolved.add(activeRowId);
         setSolvedRows(newSolved);
@@ -74,6 +104,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
   const handleKeywordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (keywordInput.toUpperCase().trim() === config.secretKeyword.toUpperCase().trim()) {
+      playSuccessSound(); // Play sound for victory too
       setIsVictory(true);
       setRevealAll(true);
     } else {
@@ -150,11 +181,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
         </button>
 
         {/* Dynamic Logo if present, else Default Title */}
-        <div className="flex-grow flex flex-col items-center">
+        <div className="flex-grow flex flex-col items-center px-4">
             {config.logoUrl ? (
                <img src={config.logoUrl} alt="Logo" className="h-16 md:h-24 object-contain mb-2 drop-shadow-lg" />
             ) : null}
-            <h1 className="text-xl sm:text-3xl font-bold text-center text-white drop-shadow-md tracking-wide">
+            <h1 
+              className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-center text-white tracking-wide uppercase"
+              style={{
+                textShadow: '0 4px 8px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5)' // Heavy shadow to pop from red background
+              }}
+            >
               {config.title}
             </h1>
         </div>
@@ -179,36 +215,58 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
         </div>
       </div>
 
-      {/* Hint Button (Visible when all solved or manually) */}
+      {/* Hint Button (Visible when all solved or manually) - Floating backup */}
       {allRowsSolved && !isVictory && (
         <button 
           onClick={() => setShowSecretHints(true)}
-          className="fixed bottom-28 right-6 z-30 bg-yellow-400 text-[#9b1106] p-3 rounded-full shadow-lg animate-bounce hover:bg-yellow-300"
+          className="fixed bottom-32 right-6 z-30 bg-yellow-400 text-[#9b1106] p-3 rounded-full shadow-lg animate-bounce hover:bg-yellow-300"
           title="Xem gợi ý từ khóa"
         >
           <Lightbulb size={24} />
         </button>
       )}
 
-      {/* Secret Hints Modal */}
-      {showSecretHints && config.secretHintImages && config.secretHintImages.length > 0 && (
+      {/* Secret Hints Modal - Main Menu */}
+      {showSecretHints && config.secretHintImages && config.secretHintImages.length > 0 && !activeHintImage && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowSecretHints(false)}></div>
-            <div className="relative bg-white rounded-xl max-w-4xl w-full p-6 animate-pop max-h-[90vh] overflow-y-auto">
-                <button onClick={() => setShowSecretHints(false)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+            <div className="relative bg-white rounded-xl max-w-xl w-full p-8 animate-pop">
+                <button onClick={() => setShowSecretHints(false)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10">
                     <X size={24} />
                 </button>
-                <h3 className="text-2xl font-bold text-[#9b1106] mb-4 text-center uppercase border-b pb-2">Gợi ý Từ Khóa Bí Mật</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="text-2xl font-bold text-[#9b1106] mb-8 text-center uppercase border-b pb-4">
+                    Gợi ý Từ Khóa Bí Mật
+                </h3>
+                
+                <div className="grid gap-4">
                     {config.secretHintImages.map((img, idx) => (
-                        <div key={idx} className="border rounded-lg overflow-hidden shadow-md">
-                             <div className="bg-red-50 text-[#9b1106] font-bold p-2 text-center text-sm">Gợi ý {idx + 1}</div>
-                             <img src={img} alt={`Hint ${idx+1}`} className="w-full h-auto object-contain" />
-                        </div>
+                        <button
+                            key={idx}
+                            onClick={() => setActiveHintImage(img)}
+                            className="w-full py-4 px-6 bg-[#9b1106] hover:bg-red-700 text-white text-xl font-bold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-between"
+                        >
+                            <span>GỢI Ý {idx + 1}</span>
+                            <ChevronRight />
+                        </button>
                     ))}
                 </div>
             </div>
         </div>
+      )}
+
+      {/* Fullscreen Hint Image Overlay */}
+      {activeHintImage && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in" onClick={() => setActiveHintImage(null)}>
+             <button onClick={() => setActiveHintImage(null)} className="absolute top-6 right-6 text-white hover:text-yellow-400 z-50 p-2 bg-white/10 rounded-full">
+                <X size={32} />
+             </button>
+             <img 
+               src={activeHintImage} 
+               alt="Secret Hint" 
+               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-pop"
+               onClick={(e) => e.stopPropagation()} // Click image shouldn't close it, only click backdrop
+             />
+         </div>
       )}
 
       {/* Secret Keyword Control Bar */}
@@ -216,12 +274,25 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             
             <div className="flex items-center gap-4 text-white">
-              <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-2 rounded-full text-white shadow-lg animate-pulse">
+              <div 
+                className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-2 rounded-full text-white shadow-lg animate-pulse cursor-pointer hover:scale-110 transition"
+                onClick={() => setShowSecretHints(true)}
+                title="Bấm để xem hình ảnh gợi ý"
+              >
                 <Key size={24} />
               </div>
-              <div>
-                {/* REMOVED text as requested */}
-                <div className="font-bold text-lg text-yellow-300 tracking-wider">TỪ KHÓA BÍ MẬT</div>
+              <div className="flex flex-col items-start">
+                <div className="flex items-center gap-2">
+                   <div className="font-bold text-lg text-yellow-300 tracking-wider">TỪ KHÓA BÍ MẬT</div>
+                   {/* Manual Trigger for Host */}
+                   <button 
+                     onClick={() => setShowSecretHints(true)}
+                     className="bg-white/10 hover:bg-white/30 text-white text-[10px] sm:text-xs px-2 py-1 rounded-md border border-white/20 transition flex items-center gap-1"
+                   >
+                     <ImageIcon size={12} />
+                     Gợi ý
+                   </button>
+                </div>
               </div>
             </div>
 
@@ -250,6 +321,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
         isOpen={!!activeRowId} 
         onClose={() => setActiveRowId(null)}
         onSubmit={handleRowSubmit}
+        volume={volume}
       />
 
       <VictoryModal 

@@ -34,8 +34,8 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ isOpen, videoUrl, victoryIm
         </div>
       </div>
 
-      {/* Modal Content - Increased Width (max-w-7xl) */}
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-7xl overflow-hidden animate-pop border-4 border-yellow-400/50">
+      {/* Modal Content - Maximized Width */}
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-[95vw] lg:max-w-[1400px] overflow-hidden animate-pop border-4 border-yellow-400/50">
         
         <button 
           onClick={onClose}
@@ -47,35 +47,36 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ isOpen, videoUrl, victoryIm
         <div className="flex flex-col lg:flex-row h-[85vh] lg:h-[700px]">
           
           {/* Left Side: Text */}
-          <div className="w-full lg:w-[35%] bg-gradient-to-br from-[#9b1106] to-[#5a0a03] text-white p-6 lg:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden z-10">
+          <div className="w-full lg:w-[30%] bg-gradient-to-br from-[#9b1106] to-[#5a0a03] text-white p-6 flex flex-col items-center justify-center text-center relative overflow-hidden z-10">
              
              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-300 via-transparent to-transparent animate-pulse"></div>
              
-             <div className="relative z-10 mb-8 transform hover:scale-110 transition duration-500">
+             <div className="relative z-10 mb-6 transform hover:scale-110 transition duration-500">
                 <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
-                <Trophy size={100} className="text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                <Trophy size={80} className="text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
              </div>
 
-             <h2 className="text-5xl lg:text-6xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 uppercase tracking-tighter drop-shadow-sm leading-tight">
+             {/* Reduced Font Size Here */}
+             <h2 className="text-3xl lg:text-4xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 uppercase tracking-tighter drop-shadow-sm leading-tight">
                Chiến Thắng!
              </h2>
              
-             <div className="bg-black/20 px-10 py-8 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner w-full">
-               <div className="text-sm text-red-300 uppercase tracking-widest mb-3">Từ khóa bí mật</div>
-               <span className="text-4xl lg:text-5xl font-mono font-bold tracking-[0.2em] text-white drop-shadow-md break-all">
+             <div className="bg-black/20 px-6 py-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner w-full">
+               <div className="text-xs text-red-300 uppercase tracking-widest mb-2">Từ khóa bí mật</div>
+               <span className="text-3xl lg:text-4xl font-mono font-bold tracking-[0.1em] text-white drop-shadow-md break-all leading-relaxed">
                  {secretKeyword}
                </span>
              </div>
 
-             <div className="mt-10 flex gap-4">
-                <Star className="text-yellow-400 w-8 h-8 fill-yellow-400 animate-bounce" style={{animationDelay: '0.1s'}} />
-                <Star className="text-yellow-400 w-8 h-8 fill-yellow-400 animate-bounce" style={{animationDelay: '0.2s'}} />
-                <Star className="text-yellow-400 w-8 h-8 fill-yellow-400 animate-bounce" style={{animationDelay: '0.3s'}} />
+             <div className="mt-8 flex gap-4">
+                <Star className="text-yellow-400 w-6 h-6 fill-yellow-400 animate-bounce" style={{animationDelay: '0.1s'}} />
+                <Star className="text-yellow-400 w-6 h-6 fill-yellow-400 animate-bounce" style={{animationDelay: '0.2s'}} />
+                <Star className="text-yellow-400 w-6 h-6 fill-yellow-400 animate-bounce" style={{animationDelay: '0.3s'}} />
              </div>
           </div>
 
-          {/* Right Side: Image (Replaces Video) */}
-          <div className="w-full lg:w-[65%] bg-black flex items-center justify-center relative shadow-inner overflow-hidden">
+          {/* Right Side: Image */}
+          <div className="w-full lg:w-[70%] bg-black flex items-center justify-center relative shadow-inner overflow-hidden">
              {victoryImageUrl ? (
                <img 
                  src={victoryImageUrl}
@@ -83,7 +84,6 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ isOpen, videoUrl, victoryIm
                  className="w-full h-full object-contain" 
                />
              ) : (
-               /* Fallback to video if image not present */
                videoUrl ? (
                  <iframe 
                    className="w-full h-full"

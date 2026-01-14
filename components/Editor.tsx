@@ -35,6 +35,17 @@ const Editor: React.FC<EditorProps> = ({ initialConfig, onStartGame }) => {
     }
   };
 
+  const handleMusicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setConfig({...config, backgroundMusicUrl: reader.result as string});
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddRow = () => {
     const newRow: CrosswordRow = {
       id: `row-${Date.now()}`,
@@ -138,12 +149,23 @@ const Editor: React.FC<EditorProps> = ({ initialConfig, onStartGame }) => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div>
                     <label className="block text-sm font-bold mb-2 flex items-center gap-2"><Music size={16}/> Nhạc nền (Link MP3)</label>
-                    <input 
-                      type="text" 
-                      value={config.backgroundMusicUrl || ''}
-                      onChange={(e) => setConfig({...config, backgroundMusicUrl: e.target.value})}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm"
-                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={config.backgroundMusicUrl || ''}
+                        onChange={(e) => setConfig({...config, backgroundMusicUrl: e.target.value})}
+                        className="flex-grow p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm"
+                      />
+                      <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 border rounded-lg px-3 flex items-center justify-center transition" title="Tải nhạc lên">
+                        <Upload size={18} className="text-gray-600" />
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="audio/*" 
+                          onChange={handleMusicUpload} 
+                        />
+                      </label>
+                    </div>
                  </div>
                  <div>
                     <label className="block text-sm font-bold mb-2 flex items-center gap-2"><Trophy size={16}/> Ảnh chiến thắng (Link)</label>
