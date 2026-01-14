@@ -51,19 +51,19 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ isOpen, videoUrl, victoryIm
              
              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-300 via-transparent to-transparent animate-pulse"></div>
              
-             <div className="relative z-10 mb-6 transform hover:scale-110 transition duration-500">
+             <div className="relative z-10 mb-4 transform hover:scale-110 transition duration-500">
                 <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
-                <Trophy size={80} className="text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                <Trophy size={64} className="text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
              </div>
 
-             {/* Reduced Font Size Here */}
-             <h2 className="text-3xl lg:text-4xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 uppercase tracking-tighter drop-shadow-sm leading-tight">
+             {/* Significantly Reduced Font Size */}
+             <h2 className="text-xl sm:text-2xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 uppercase tracking-tighter drop-shadow-sm leading-tight">
                Chiến Thắng!
              </h2>
              
-             <div className="bg-black/20 px-6 py-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner w-full">
+             <div className="bg-black/20 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner w-full">
                <div className="text-xs text-red-300 uppercase tracking-widest mb-2">Từ khóa bí mật</div>
-               <span className="text-3xl lg:text-4xl font-mono font-bold tracking-[0.1em] text-white drop-shadow-md break-all leading-relaxed">
+               <span className="text-2xl lg:text-3xl font-mono font-bold tracking-[0.1em] text-white drop-shadow-md break-all leading-relaxed">
                  {secretKeyword}
                </span>
              </div>
