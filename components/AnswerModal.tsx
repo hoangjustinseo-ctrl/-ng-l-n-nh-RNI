@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Image as ImageIcon } from 'lucide-react';
+import { X, Send, Clock, Eye } from 'lucide-react';
 import { CrosswordRow } from '../types';
 
 interface AnswerModalProps {
@@ -11,13 +11,36 @@ interface AnswerModalProps {
 
 const AnswerModal: React.FC<AnswerModalProps> = ({ row, isOpen, onClose, onSubmit }) => {
   const [input, setInput] = useState('');
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [showAnswerForce, setShowAnswerForce] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isOpen && row) {
       setInput('');
+      setShowAnswerForce(false);
+      setTimeLeft(30);
       setTimeout(() => inputRef.current?.focus(), 100);
+
+      // Start Timer
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
     }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [isOpen, row]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,18 +49,32 @@ const AnswerModal: React.FC<AnswerModalProps> = ({ row, isOpen, onClose, onSubmi
     onSubmit(input.trim());
   };
 
+  const handleReveal = () => {
+    if (row) {
+        setInput(row.answer);
+        setShowAnswerForce(true);
+    }
+  };
+
   if (!isOpen || !row) return null;
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-pop flex flex-col max-h-[90vh]">
+      <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-pop flex flex-col max-h-[95vh]">
         
-        {/* Header with optional image */}
-        <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-start">
-           <div className="text-[#9b1106] font-bold uppercase text-xs tracking-wider">
-             Câu hỏi số {row.id.split('-').pop()}
+        {/* Header */}
+        <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
+           <div className="flex items-center gap-3">
+             <div className="text-[#9b1106] font-bold uppercase text-xs tracking-wider border border-red-200 px-2 py-1 rounded bg-white">
+               Câu {row.id.split('-').pop()}
+             </div>
+             {/* Timer Display */}
+             <div className={`flex items-center gap-1 font-mono font-bold text-lg ${timeLeft === 0 ? 'text-red-600 animate-pulse' : 'text-gray-600'}`}>
+                <Clock size={18} />
+                <span>00:{timeLeft.toString().padStart(2, '0')}</span>
+             </div>
            </div>
            <button 
             onClick={onClose}
@@ -47,21 +84,21 @@ const AnswerModal: React.FC<AnswerModalProps> = ({ row, isOpen, onClose, onSubmi
           </button>
         </div>
 
-        <div className="overflow-y-auto p-6 custom-scrollbar">
-          {/* Question Image */}
+        <div className="overflow-y-auto p-6 custom-scrollbar flex-1 flex flex-col">
+          {/* Question Image - Object Contain to prevent cropping */}
           {row.imageUrl && (
-            <div className="mb-4 rounded-lg overflow-hidden shadow-md border border-gray-100">
-              <img src={row.imageUrl} alt="Gợi ý" className="w-full h-48 object-cover" />
+            <div className="mb-4 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 flex justify-center items-center h-56 flex-shrink-0">
+              <img src={row.imageUrl} alt="Gợi ý" className="w-full h-full object-contain" />
             </div>
           )}
 
-          <div className="text-center mb-6">
+          <div className="text-center mb-6 flex-grow flex items-center justify-center">
             <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 leading-relaxed">
               {row.question}
             </h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative group">
                <input
                 ref={inputRef}
@@ -78,7 +115,25 @@ const AnswerModal: React.FC<AnswerModalProps> = ({ row, isOpen, onClose, onSubmi
               </p>
             </div>
 
+            {/* Time's up or Manual Reveal */}
+            {(timeLeft === 0 || showAnswerForce) && (
+                 <div className="bg-yellow-50 text-yellow-800 p-2 rounded text-center text-sm border border-yellow-200 mb-2">
+                    Đáp án là: <strong>{row.answer}</strong>. Hãy nhập vào để tiếp tục!
+                 </div>
+            )}
+
             <div className="flex gap-3 pt-2">
+                {/* Reveal button if time is up or user gives up */}
+               {timeLeft === 0 && !showAnswerForce && (
+                    <button 
+                        type="button"
+                        onClick={handleReveal}
+                        className="px-4 rounded-xl font-bold text-[#9b1106] border-2 border-[#9b1106] hover:bg-red-50 transition flex items-center justify-center gap-2"
+                    >
+                        <Eye size={18} />
+                    </button>
+               )}
+               
                <button 
                  type="button"
                  onClick={onClose}

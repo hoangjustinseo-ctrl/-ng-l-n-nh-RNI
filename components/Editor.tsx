@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GameConfig, CrosswordRow } from '../types';
 import { HOMECOMING_TEMPLATE } from '../constants';
-import { Plus, Trash2, Play, LayoutTemplate, Image as ImageIcon, Settings, Upload } from 'lucide-react';
+import { Plus, Trash2, Play, LayoutTemplate, Image as ImageIcon, Settings, Upload, Music, Trophy } from 'lucide-react';
 
 interface EditorProps {
   initialConfig: GameConfig;
@@ -135,6 +135,27 @@ const Editor: React.FC<EditorProps> = ({ initialConfig, onStartGame }) => {
                 </div>
               </div>
 
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                    <label className="block text-sm font-bold mb-2 flex items-center gap-2"><Music size={16}/> Nhạc nền (Link MP3)</label>
+                    <input 
+                      type="text" 
+                      value={config.backgroundMusicUrl || ''}
+                      onChange={(e) => setConfig({...config, backgroundMusicUrl: e.target.value})}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm"
+                    />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-bold mb-2 flex items-center gap-2"><Trophy size={16}/> Ảnh chiến thắng (Link)</label>
+                    <input 
+                      type="text" 
+                      value={config.victoryImageUrl || ''}
+                      onChange={(e) => setConfig({...config, victoryImageUrl: e.target.value})}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm"
+                    />
+                 </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-red-50 rounded-lg border border-red-100">
                 <div>
                   <label className="block text-sm font-bold mb-2 text-[#9b1106]">TỪ KHÓA BÍ MẬT (Viết hoa)</label>
@@ -146,7 +167,7 @@ const Editor: React.FC<EditorProps> = ({ initialConfig, onStartGame }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold mb-2 text-[#9b1106]">Gợi ý từ khóa</label>
+                  <label className="block text-sm font-bold mb-2 text-[#9b1106]">Gợi ý từ khóa (Text)</label>
                   <input 
                     type="text" 
                     value={config.secretHint}
@@ -156,15 +177,18 @@ const Editor: React.FC<EditorProps> = ({ initialConfig, onStartGame }) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold mb-2">Video chiến thắng (Youtube Embed)</label>
-                <input 
-                  type="text" 
-                  value={config.victoryVideoUrl}
-                  onChange={(e) => setConfig({...config, victoryVideoUrl: e.target.value})}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm font-mono text-gray-500"
-                />
-              </div>
+              {/* Secret Hints Images Input (Simple implementation for now) */}
+               <div>
+                  <label className="block text-sm font-bold mb-2 text-[#9b1106]">Ảnh Gợi ý đặc biệt (Nhập link, phân cách bởi dấu phẩy)</label>
+                  <input 
+                    type="text" 
+                    placeholder="https://image1.jpg, https://image2.jpg"
+                    value={config.secretHintImages ? config.secretHintImages.join(', ') : ''}
+                    onChange={(e) => setConfig({...config, secretHintImages: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#9b1106] outline-none text-sm"
+                  />
+                </div>
+
             </div>
           )}
 

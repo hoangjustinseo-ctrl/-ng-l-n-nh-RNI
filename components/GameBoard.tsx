@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GameConfig } from '../types';
 import GameRow from './GameRow';
 import AnswerModal from './AnswerModal';
 import VictoryModal from './VictoryModal';
-import { Key, Unlock, ArrowLeft, Star } from 'lucide-react';
+import { Key, Unlock, ArrowLeft, Star, Volume2, VolumeX, Lightbulb, X } from 'lucide-react';
 
 interface GameBoardProps {
   config: GameConfig;
@@ -17,6 +17,32 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
   const [isVictory, setIsVictory] = useState(false);
   const [praiseMessage, setPraiseMessage] = useState<{text: string, id: number} | null>(null);
   const [revealAll, setRevealAll] = useState(false);
+  
+  // Audio State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Secret Hint Modal
+  const [showSecretHints, setShowSecretHints] = useState(false);
+
+  // Auto-play music on first interaction if possible, or just setup
+  useEffect(() => {
+    if (audioRef.current) {
+        audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play().catch(e => console.log("Audio play failed interaction required", e));
+        }
+        setIsPlaying(!isPlaying);
+    }
+  };
 
   const triggerPraise = () => {
     const praises = ["Tuyệt vời!", "Chính xác!", "Hay quá!", "Đúng rồi!", "Xuất sắc!"];
@@ -57,6 +83,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
 
   const activeRow = config.rows.find(r => r.id === activeRowId) || null;
 
+  // Check if all rows are solved
+  const allRowsSolved = config.rows.length > 0 && solvedRows.size === config.rows.length;
+
+  // Automatically show hints modal if all rows solved but not victory
+  useEffect(() => {
+    if (allRowsSolved && !isVictory) {
+        setShowSecretHints(true);
+    }
+  }, [allRowsSolved, isVictory]);
+
   return (
     <div 
       className="min-h-screen bg-[#9b1106] flex flex-col items-center py-4 px-2 sm:px-6 relative bg-cover bg-center transition-all duration-700"
@@ -65,6 +101,27 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
       }}
     >
       
+      {/* Background Audio */}
+      {config.backgroundMusicUrl && (
+        <audio ref={audioRef} src={config.backgroundMusicUrl} loop />
+      )}
+
+      {/* Audio Controls */}
+      <div className="fixed top-4 right-4 z-40 bg-black/30 backdrop-blur rounded-full p-2 flex items-center gap-2 hover:bg-black/50 transition border border-white/10">
+         <button onClick={toggleAudio} className="text-white hover:text-yellow-400 p-1">
+            {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+         </button>
+         <input 
+           type="range" 
+           min="0" 
+           max="1" 
+           step="0.1" 
+           value={volume} 
+           onChange={(e) => setVolume(parseFloat(e.target.value))}
+           className="w-16 h-1 bg-white/50 rounded-lg appearance-none cursor-pointer"
+         />
+      </div>
+
       {/* Impressive Praise Overlay */}
       {praiseMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
@@ -105,7 +162,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
         <div className="w-20"></div> {/* Spacer */}
       </div>
 
-      {/* Main Grid Area - Vertical Centering */}
+      {/* Main Grid Area */}
       <div className="flex-grow w-full max-w-[95vw] overflow-x-auto pb-24 custom-scrollbar flex items-center justify-center">
         <div className="flex flex-col items-center w-full">
           {config.rows.map((row, index) => (
@@ -122,7 +179,39 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
         </div>
       </div>
 
-      {/* Secret Keyword Control Bar (Sticky Bottom) */}
+      {/* Hint Button (Visible when all solved or manually) */}
+      {allRowsSolved && !isVictory && (
+        <button 
+          onClick={() => setShowSecretHints(true)}
+          className="fixed bottom-28 right-6 z-30 bg-yellow-400 text-[#9b1106] p-3 rounded-full shadow-lg animate-bounce hover:bg-yellow-300"
+          title="Xem gợi ý từ khóa"
+        >
+          <Lightbulb size={24} />
+        </button>
+      )}
+
+      {/* Secret Hints Modal */}
+      {showSecretHints && config.secretHintImages && config.secretHintImages.length > 0 && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowSecretHints(false)}></div>
+            <div className="relative bg-white rounded-xl max-w-4xl w-full p-6 animate-pop max-h-[90vh] overflow-y-auto">
+                <button onClick={() => setShowSecretHints(false)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+                    <X size={24} />
+                </button>
+                <h3 className="text-2xl font-bold text-[#9b1106] mb-4 text-center uppercase border-b pb-2">Gợi ý Từ Khóa Bí Mật</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {config.secretHintImages.map((img, idx) => (
+                        <div key={idx} className="border rounded-lg overflow-hidden shadow-md">
+                             <div className="bg-red-50 text-[#9b1106] font-bold p-2 text-center text-sm">Gợi ý {idx + 1}</div>
+                             <img src={img} alt={`Hint ${idx+1}`} className="w-full h-auto object-contain" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Secret Keyword Control Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md border-t border-white/10 p-4 pb-6 z-30">
          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             
@@ -131,8 +220,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
                 <Key size={24} />
               </div>
               <div>
-                <div className="text-xs uppercase tracking-wider opacity-80 text-yellow-200">Gợi ý từ khóa</div>
-                <div className="font-semibold text-sm sm:text-base text-white">{config.secretHint}</div>
+                {/* REMOVED text as requested */}
+                <div className="font-bold text-lg text-yellow-300 tracking-wider">TỪ KHÓA BÍ MẬT</div>
               </div>
             </div>
 
@@ -141,7 +230,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
                 type="text" 
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
-                placeholder="Nhập từ khóa bí mật..."
+                placeholder="Nhập từ khóa..."
                 className="flex-grow md:w-64 px-5 py-3 rounded-full bg-white/95 text-[#9b1106] font-bold placeholder-red-800/40 outline-none focus:ring-4 focus:ring-yellow-400/50 shadow-inner"
               />
               <button 
@@ -166,6 +255,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ config, onBackToEditor }) => {
       <VictoryModal 
         isOpen={isVictory}
         videoUrl={config.victoryVideoUrl}
+        victoryImageUrl={config.victoryImageUrl}
         onClose={() => setIsVictory(false)}
         secretKeyword={config.secretKeyword}
       />

@@ -9,10 +9,13 @@ export interface CrosswordRow {
 export interface GameConfig {
   title: string;
   secretKeyword: string;
-  secretHint: string;
+  secretHint: string; // Text hint (optional now)
+  secretHintImages?: string[]; // Array of URLs for visual hints
   rows: CrosswordRow[];
-  victoryVideoUrl: string;
+  victoryImageUrl?: string; // Replaces video
+  victoryVideoUrl?: string; // Kept for backward compatibility or optional use
   backgroundImageUrl?: string; // Custom background
+  backgroundMusicUrl?: string; // URL for MP3
   logoUrl?: string; // Custom Logo
   isEditorMode?: boolean;
 }
